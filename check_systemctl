@@ -1,0 +1,42 @@
+#!/bin/bash
+
+PLUGINDIR=$(dirname $0)
+. $PLUGINDIR/utils.sh
+
+
+if [[ $# -ne 1 ]]; then
+    echo "Usage: ${0##*/} <service name>"
+    exit $STATE_UNKNOWN
+fi
+
+SERVICE=$1
+
+CHECK=`systemctl is-active $SERVICE`
+r=$?
+
+if [[ -z "$SERVICE" ]]; then
+    echo "ERROR: service $SERVICE doesn't exist"
+    exit $STATE_CRITICAL
+else
+    if [[ $r -eq 3 ]];then
+	      echo "ERROR: service $SERVICE is not running"
+	      exit $STATE_CRITICAL
+    elif [[ $r -eq 0 ]];then
+	      CHECKEN=`systemctl is-enabled $SERVICE 2>/dev/null`
+	      ren=$?
+	      if [[ $ren -eq 0 ]];then
+	          echo "OK: service $SERVICE is running and enabled"
+	          exit $STATE_OK
+	      else
+	          echo "WARNING: service $SERVICE is running but NOT ENABLED!!!"
+	          exit $STATE_WARNING
+	      fi
+#    if [ $CHECK == "active" ]; then
+#	echo "good: $r"
+#    elif [ $CHECK == "inactive" ]; then
+#    echo "BAD: $r"
+    else
+	     echo "UNKNOWN"
+	     exit $STATE_UNKNOWN
+    fi
+fi
